@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Welcome to Tasker</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="google-signin-client_id" content="884649243530-8q2rtgkgv0eimaaai12afnchdd9addhu.apps.googleusercontent.com">
+
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.3/build/pure-min.css" integrity="sha384-cg6SkqEOCV1NbJoCu11+bm0NvBRc8IYLRGXkmNrqUBfTjmMYwNKPWBTIKyw9mHNJ" crossorigin="anonymous">
+        <link rel="stylesheet" href="stylesheets/style.css">
+
+        <script src="javascripts/landing_page.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+    </head>
+    <body>
+
+        <header>
+            <div class="pure-u-1-5">
+                <a href="" style="padding:1rem 1rem; margin-right:3%; display:none;">
+                    <span class="material-icons md-light md-2rem">menu</span>
+                </a>
+            </div>
+            <a class="header-logo" href="#">
+                <img src="images/logo.png" alt="Tasker" height="30">
+            </a>
+            <div class="pure-u-3-5"></div>
+            <div class="pure-u-1-3">
+                <ul class="pure-menu-horizontal header-menu">
+
+                    <!--SIGN IN-->
+                    <li class="pure-menu-item">
+                        <button onclick="signIn();" class="pure-button pure-button-primary">Sign In</button>
+                    </li>
+
+                    <!--SIGN UP-->
+                    <li class="pure-menu-item">
+                        <button onclick="signUp();" class="pure-button pure-button-primary">Sign Up</button>
+                    </li>
+
+                </ul>
+            </div>
+            <div class="pure-u-1-5"></div>
+        </header>
+
+
+        <div class="splash-container">
+            <div class="splash">
+                <h1>WELCOME TO TASKER</h1>
+                <p>Get your team organised with Tasker!</p>
+                <button onclick="signUp();" class="pure-button pure-button-primary">Get Started</button>
+
+                <div class="splash-indicator">
+                    <button onclick="scrollDown();" class="pure-button pure-button-primary">
+                        <i class="material-icons md-light">expand_more</i>
+                    </button>
+                </div>
+            </div>
+
+
+        </div>
+
+        <div class="container-wrapper">
+            <div id="feature-showcase" class="container-feature-showcase">
+                <h1>Features</h1>
+                <hr>
+
+                <div class="feature-showcase">
+                    <div class="row">
+                        <div class="column">
+                            <div class="card">
+                                <img src="images/features/0.png" alt="Picture of a Task">
+                                <h3 style="margin:0;">Create and complete Tasks!</h3>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="card">
+                                <img src="images/features/1.png" alt="Picture of Tasker's Home">
+                                <h3 style="margin:0;">Sort and view your Tasks!</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="row">
+                        <div class="column">
+                            <div class="card">
+                                <img src="images/features/2.png" alt="Picture of Team View">
+                                <h3 style="margin:0;">View your Teams Tasks and Users!</h3>
+                            </div>
+                        </div>
+                        <div class="column">
+                            <div class="card">
+                                <img src="images/features/3.png" alt="Picture of Team Management Tools">
+                                <h3 style="margin:0;">Fully manage your Team!</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div onclick="closePopup();" id="popup-background" style="display:none;"></div>
+
+        <div id="popup" class="signup-signin" style="display:none;">
+            <a onclick="closePopup();" href="#">
+                <span class="material-icons">close</span>
+            </a>
+            <img src="images/logo.png" alt="Tasker Logo" style="width:80%; margin:0 5% 0 5%;">
+
+            <!--SIGN UP-->
+            <div id="sign-up" class="signup-signin-form" style="display:none;">
+                <form action="/signup" method="POST" id="signup-form" class="pure-form pure-form-stacked">
+                    <h2>Create an Account</h2>
+                    <input type="email" name="email" placeholder="Email" required="">
+                    <input type="text" name="f_name" placeholder="First Name" required="">
+                    <input type="text" name="l_name" placeholder="Last Name" required="">
+                    <input type="password" name="password" placeholder="Password" required="">
+                    <button type="submit" class="pure-button pure-button-primary red-button"><b>Sign Up</b></button>
+                </form>
+                <h3>OR</h3>
+                <div class="signup-signin-third-party">
+                    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+                </div>
+                <hr style="margin-top:6.67%;">
+                <h3>Have an Account?</h3>
+                <button onclick="signIn();" class="pure-button pure-button-primary red-button" style="margin-top:-2%;">Sign In</button>
+            </div>
+
+            <!--SIGN IN-->
+            <div id="sign-in" class="signup-signin-form" style="display:none;">
+                <form action="/login" method="post" id="signin-form" class="pure-form pure-form-stacked">
+                    <h2>Sign In</h2>
+                    <input type="email" name="email" placeholder="Email">
+                    <input type="password" name="password" placeholder="Password">
+                    <button type="submit" class="pure-button pure-button-primary red-button" style="margin-top:3%;"><b>Sign in</b></button>
+                </form>
+                <h3>OR</h3>
+                <div class="signup-signin-third-party">
+                    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+                </div>
+                <hr style="margin-top:10%;">
+                <h3 style="margin-top:7.5%;">New User?</h3>
+                <button onclick="signUp();" class="pure-button pure-button-primary red-button" style="margin-top:-2%;">Create an Account</button>
+            </div>
+
+        </div>
+
+
+    </body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Tasker - Teams</title>
+        <meta charset="utf-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="google-signin-client_id" content="884649243530-8q2rtgkgv0eimaaai12afnchdd9addhu.apps.googleusercontent.com">
+
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.3/build/pure-min.css" integrity="sha384-cg6SkqEOCV1NbJoCu11+bm0NvBRc8IYLRGXkmNrqUBfTjmMYwNKPWBTIKyw9mHNJ" crossorigin="anonymous">
+        <link rel="stylesheet" href="stylesheets/style.css">
+
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <script src="javascripts/tasks.js" defer></script>
+        <script src="https://apis.google.com/js/platform.js" async defer></script>
+
+
+    </head>
+    <body>
+        <div id="vapp" v-cloak>
+        <header>
+            <div class="pure-u-1-5">
+                <a href="" style="padding:1rem 1rem; margin-right:3%; display:none;">
+                    <span class="material-icons md-light md-2rem">menu</span>
+                </a>
+            </div>
+            <a class="header-logo" href="home">
+                <img src="images/logo.png" alt="Tasker" height="30">
+            </a>
+            <div class="pure-u-3-5"></div>
+            <div class="pure-u-1-3">
+                <ul class="pure-menu-horizontal header-menu">
+                    <!--HOME-->
+                    <li class="pure-menu-item">
+                        <a href="home" onclick="app.closePopup();">
+                            <span class="material-icons md-light md-2rem">home</span>
+                        </a>
+                    </li>
+                    <!--TEAMS-->
+                    <li class="pure-menu-item">
+                        <a href="teams" onclick="app.closePopup();">
+                            <span class="material-icons md-light md-2rem">group</span>
+                        </a>
+                    </li>
+                    <!--SETTINGS-->
+                    <li class="pure-menu-item">
+                        <a href="#" v-on:click="viewSettingsPopup();">
+                            <span class="material-icons md-light md-2rem">settings</span>
+                        </a>
+                    </li>
+                    <!--LOG OUT-->
+                    <li class="pure-menu-item">
+                        <a href="#" onclick="app.logout();">
+                            <span class="material-icons md-light md-2rem">exit_to_app</span>
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+        </header>
+
+        <nav>
+
+            <!-- NEW TASK BUTTON-->
+            <div class="nav-section">
+                <button v-on:click="createTaskPopup();" class="pure-button pure-button-primary nav-button">
+                    <span class="material-icons md-light">add</span>
+                    <b>New Task</b>
+                </button>
+            </div>
+
+            <hr>
+            <h3>Teams</h3>
+            <div id="teams_list" class="nav-section" v-for="team in teams">
+
+                <a href="#" v-on:click="getTeam(team.teamID)"  class="pure-menu-link nav-button">
+                    <span class="team-dot-24" v-bind:style="{ backgroundColor: team.color }"></span>
+                    <p>{{ team.name }}</p>
+                    <span class="material-icons">arrow_right</span>
+                </a>
+
+            </div>
+            <hr>
+
+            <!-- NEW TASK BUTTON-->
+            <div class="nav-section">
+                <button v-on:click="createTeamPopup();" class="nav-button pure-button button pure-button-primary">
+                    <span class="material-icons" style="margin-right:0.5rem;">group_add</span>
+                    <b>New Team</b>
+                </button>
+            </div>
+
+        </nav>
+
+        <main>
+
+            <div v-if="!selectedTeam">
+                    <h1 style="text-align: center;">Choose a team from the menu!</h1>
+                    <br>
+                    <h3 style="text-align: center;">Don't see any teams? Create a new Team by clicking the "New Team" button!</h3>
+            </div>
+
+            <div v-if="selectedTeam">
+                <div class="main-header">
+                    <div class="team-header">
+                        <span class="team-dot-64" v-bind:style="{ backgroundColor: selectedTeam.color }"></span>
+                        <h1>{{ selectedTeam.name }}</h1>
+                    </div>
+                </div>
+                <div class="content-day">
+
+                    <!-- TEAM TASKS -->
+                    <h2>Team Tasks</h2>
+                    <hr>
+                    <div class="team-tasks">
+
+                        <div class="content-day">
+                            <div class="content-task-container" v-for="task in selectedTeamTasks" v-bind:class="{'content-task-completed': task.complete_status}">
+                                <div class="content-team-container">
+                                    <a href="#" v-on:click="viewTaskPopup(task); selectedTask = task;" class="content-team-link">
+                                        <h3>{{ getUserName(task.userID) }}</h3>
+                                    </a>
+                                </div>
+                                <div class="content-tasks">
+
+                                    <div class="content-task-element">
+                                        <a href="#" v-on:click="viewTaskPopup(task); selectedTask = task;" class="content-task-link">
+                                            <p>{{ task.name }}</p>
+                                            <p><b>Due</b> {{ getDueDateString(task) }}</p>
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- MEMBER PROFILES -->
+                    <h2>Members</h2>
+                    <hr>
+
+                    <!-- MANAGER PROFILES -->
+                    <h3>Managers</h3>
+                    <div class="team-members">
+
+                        <div class="team-member-profile" v-for="manager in selectedTeamManagers" v-on:click="selectUserID(manager.userID)" v-bind:id="manager.userID+''">
+                            <a href="#" class="team-member-profile-picture">
+                                <img src="images/users/default.png" alt="user picture" style="width:64px;">
+                            </a>
+                            <p class="team-member-profile-name"><b>{{ manager.name_first + " " + manager.name_last[0] + "."}}</b></p>
+                            <p class="team-member-profile-tooltip">{{ manager.name_first + " " + manager.name_last }}</p>
+                        </div>
+
+                    </div>
+
+                    <!-- USER PROFILES -->
+                    <h3>Users</h3>
+                    <div class="team-members">
+
+                        <div class="team-member-profile" v-for="user in selectedTeamUsers" v-on:click="selectUserID(user.userID)" v-bind:id="user.userID+''">
+                            <a href="#" class="team-member-profile-picture">
+                                <img src="images/users/default.png" alt="user picture" style="width:64px;">
+                            </a>
+                            <p><b>{{ user.name_first + " " + user.name_last[0] + "."}}</b></p>
+                            <p class="team-member-profile-tooltip">{{ user.name_first + " " + user.name_last }}</p>
+                        </div>
+
+                    </div>
+
+                    <hr>
+                    <br>
+
+                    <!-- TEAM CONTROL BUTTONS -->
+                    <div class="team-manage" v-if="isSelectedTeamManager">
+                        <h2>Manage</h2>
+                        <div class="team-manage-options">
+                            <button v-on:click="teamAddMember();" class="pure-button pure-button-primary green-button">Add Member</button>
+                            <button v-on:click="teamRemoveMember(selectedUserID);" class="pure-button pure-button-primary red-button">Remove Member</button>
+
+                            <button v-on:click="teamPromoteMember(selectedUserID);" class="pure-button pure-button-primary">Promote User</button>
+                            <button v-on:click="teamDemoteMember(selectedUserID);" class="pure-button pure-button-primary orange-button">Demote Manager</button>
+                        </div>
+                        <hr style="width:100%;">
+                    </div>
+                    <div class="team-manage-options">
+                        <button onclick="if (window.confirm('Are you sure you want to leave this team?')){app.teamLeave(-1);}" class="pure-button pure-button-primary red-button">Leave Team</button>
+                        <button onclick="if (window.confirm('Are you sure you want to delete this team?')){app.teamDelete();}" class="pure-button pure-button-primary orange-button" v-if="isSelectedTeamManager">Delete Team</button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <!-- POP UPS-->
+        <div v-on:click="closePopup()" id="popup-background" v-if="showPopup.background"></div>
+        <div id="popup-div" v-if="showPopup.popup"></div>
+
+            <!--CREATE TEAM-->
+            <div class="task-container" v-if="showPopup.createTeam">
+                <div class="task-header">
+                    <h1 class="task-header-title">New Team</h1>
+                </div>
+                <hr style="width: 90%;">
+                <form id="newTeamForm" action="/users/teams/new" method="post" class="pure-form pure-form-stacked new-team" style="padding:0% 5%;">
+                    <fieldset>
+                        <div class="task-container-row">
+                            <div class="pure-u-1">
+                                <label>Team Name:</label>
+                                <input type="text" name="newTeam_name" class="pure-u-1-1" required="">
+                            </div>
+                        </div>
+                        <div class="task-container-row" style="justify-content:space-between; align-items:center;margin-top:5%;">
+                            <div>
+                                <label>Preview:</label>
+                                <div id="team_color_preview" style="min-height:64px; min-width:64px;"></div>
+                            </div>
+                        </div>
+                        <div class="task-container-row">
+                            <div style="max-width:500px;overflow:hidden;">
+                                <label>Team Color:</label>
+                                <input type="color" id="team_col" name="newTeam_color"
+                                    onchange="document.getElementById('team_color_preview').style.backgroundColor = document.getElementById('team_col').value">
+                            </div>
+                        </div>
+
+                        <div class="task-container-row" style="justify-content:center;">
+                            <input type="submit" class="pure-button pure-button-primary" value="Create Team">
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+
+            <!--VIEW TASK-->
+            <div class="task-container" v-if="showPopup.viewTask">
+                <div class="task-header">
+                    <div class="task-title">
+                        <div class="task-title-text">
+                            <h3 style="margin:0;">{{ viewTask.team }}</h3>
+                            <h1 style="margin:0;">{{ viewTask.name }}</h1>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="task-title pure-button" v-on:click="selectedDate=selectedTask.due_date.slice(0, 10);selectedTime=selectedTask.due_date.slice(11, 16); viewTaskEdit()" v-if="isSelectedTeamManager">
+                        <span class="material-icons">create</span>
+                        </button>
+                        <button class="task-title pure-button pure-button-primary" onclick="if (window.confirm('Are you sure you want to delete this task?')){app.teamTaskDelete();}" v-if="isSelectedTeamManager">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </div>
+                </div>
+                <hr style="width: 90%;">
+                <div class="task-view" style="padding:0 5% 5%;">
+                    <div class="task-container-row" style="justify-content:space-between;">
+                        <div style="min-width: 60%;">
+                            <h3 style="margin-bottom:0;">Due Date</h3>
+                            <h2 style="margin-top:0;">{{ viewTask.due_date }}</h2>
+                        </div>
+                        <div style="min-width: 25%;">
+                            <h3 style="margin-bottom:0;">Priority</h3>
+                            <h2 style="margin-top:0;">{{ viewTask.priority }}</h2>
+                        </div>
+                    </div>
+                    <div class="task-container-row" style="justify-content: left;">
+                        <div>
+                            <h3 style="margin-bottom:0;">Assigned to</h3>
+                            <h2 style="margin-top:0;">{{ viewTask.userName }}</h2>
+                        </div>
+                    </div>
+                    <div class="pure-u-1 pure-u-md-1-1 task-view-item">
+                        <h3 style="margin-bottom:1%;">Task Description</h3>
+                        <div class="task-view-description">
+                            <p>{{ viewTask.description }}</p>
+                        </div>
+                    </div>
+                    <div class="pure-u-1 pure-u-md-1-1">
+                    </div>
+                </div>
+            </div>
+
+            <!--CREATE TASK-->
+            <div class="task-container" v-if="showPopup.createTask">
+                <div class="task-header">
+                    <h1 class="task-header-title">New Task</h1>
+                </div>
+                <hr style="width: 90%;">
+                <form id="newTaskForm" action="/users/task/new" method="post"  class="pure-form pure-form-stacked" style="padding:0% 5%;">
+                    <fieldset>
+                        <div class="pure-u-1">
+                            <label>Task Name:</label>
+                            <input type="text" name="newTask_name" class="pure-u-1-1" required="">
+                        </div>
+                        <div class="task-container-row">
+                            <div class="pure-u-1 pure-u-md-1-3">
+                                <label>Due Date:</label>
+                                <input type="date" name="newTask_date" id="datePickerId" required="" v-model="selectedDate">
+                            </div>
+                            <div class="pure-u-1 pure-u-md-1-3">
+                                <label>Time:</label>
+                                <input type="time" name="newTask_time" required="">
+                            </div>
+                            <div class="pure-u-1 pure-u-md-1-3">
+                                <label>Priority:</label>
+                                <select name="newTask_priority" required="">
+                                    <option value="">Choose</option>
+                                    <option value=2>High</option>
+                                    <option value=1>Medium</option>
+                                    <option value=0>Low</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Task Description:</label>
+                            <textarea name="newTask_desc"></textarea>
+                        </div>
+                        <div class="task-container-row">
+                            <div style="min-width: 50%;">
+                                <label>Team:</label>
+                                <select name="newTask_team" required="" v-model="selectedTeam" v-on:change="getTeamMembers( selectedTeam )">
+                                    <option disabled hidden value="">Choose Team</option>
+                                    <option v-for="team in managingTeams" v-bind:value="team.teamID">{{ team.name }}</option>
+                                </select>
+                            </div>
+                            <div style="min-width: 40%;">
+                                <label>Assign To:</label>
+                                <select name="newTask_assignee" required="" id="newTaskUser" v-model="selectedUserID">
+                                    <option value="">Choose</option>
+                                    <option v-for="user in selectedTeamMembers" v-bind:value="user.userID">{{ user.name_first + " " + user.name_last }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="task-container-row submit" style="justify-content:center;">
+                            <input type="button" class="pure-button pure-button-primary" value="Create Task" v-if="checkAvailability(selectedUserID, selectedDate)" onclick="app.newTask(false);">
+                            <span style="color: red;" v-if="!checkAvailability(selectedUserID, selectedDate)">Member is unavailable on the selected due date!</span>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+
+            <!--EDIT TASK-->
+            <div class="task-container" v-if="showPopup.viewTaskEdit">
+                <div class="task-header">
+                    <h1 class="task-header-title">Edit Task</h1>
+                </div>
+                <hr style="width: 90%;">
+                <form id="editTaskForm" class="pure-form pure-form-stacked" style="padding:0% 5%;">
+                    <fieldset>
+                        <div>
+                            <input hidden type="text" name="taskID" v-bind:value="selectedTask.taskID">
+                            <input hidden type="text" name="teamID" v-bind:value="selectedTeam.teamID">
+                        </div>
+                        <div class="pure-u-1">
+                            <label>Task Name:</label>
+                            <input type="text" name="editTask_name" class="pure-u-1-1" required="" v-bind:value="selectedTask.name">
+                        </div>
+                        <div class="task-container-row">
+                            <div class="pure-u-1 pure-u-md-1-3">
+                                <label>Due Date:</label>
+                                <input type="date" name="editTask_date" id="datePickerId" required="" v-bind:value="editDate">
+                            </div>
+                            <div class="pure-u-1 pure-u-md-1-3">
+                                <label>Time:</label>
+                                <input type="time" name="editTask_time" required="" v-bind:value="selectedTime">
+                            </div>
+                            <div class="pure-u-1 pure-u-md-1-3">
+                                <label>Priority:</label>
+                                <select name="editTask_priority" required="" v-bind:value="selectedTask.priority">
+                                    <option value="">Choose</option>
+                                    <option value=2>High</option>
+                                    <option value=1>Medium</option>
+                                    <option value=0>Low</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Task Description:</label>
+                            <textarea name="editTask_desc" v-bind:value="selectedTask.description"></textarea>
+                        </div>
+                        <div class="task-container-row">
+                            <div style="min-width: 50%;">
+                                <label>Team:</label>
+                                <select name="editTask_team" required="">
+                                    <option selected v-bind:value="selectedTask.teamID">{{ selectedTeam.name }}</option>
+                                </select>
+                            </div>
+                            <div style="min-width: 40%;">
+                                <label>Assign To:</label>
+                                <select name="editTask_assignee" required="" id="newTaskUser" v-model="editUserID">
+                                    <option disabled v-bind:value="selectedTask.userID">Current: {{ getUserName(selectedTask.userID) }}</option>
+                                    <option value="">---------</option>
+                                    <option v-for="user in selectedTeamManagers" v-bind:value="user.userID">{{ user.name_first + " " + user.name_last }}</option>
+                                    <option v-for="user in selectedTeamUsers" v-bind:value="user.userID">{{ user.name_first + " " + user.name_last }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="task-container-row submit" style="justify-content:center;">
+                            <input type="button" class="pure-button pure-button-primary" value="Save Changes" v-if="editCheckAvailability(editUserID, editDate, true)" onclick="app.teamTaskEdit();">
+                            <span style="color: red;" v-if="!editCheckAvailability(editUserID, editDate, true)">Member is unavailable on the selected due date!</span>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+
+            <!--VIEW SETTINGS-->
+            <div class="pure g settings-container" v-if="showPopup.viewSettings">
+                <div class="pure-u-md-1 settings-header">
+                    <h1>Settings</h1>
+                </div>
+                <hr>
+                <div class="settings-contents">
+                    <div class="pure-u-lg-1-4 pure-menu settings-menu">
+                        <ul class="pure-menu-list">
+                            <li class="pure-menu-item">
+                                <a href="#" class="pure-menu-link" v-on:click="settingsMenu = 0" v-bind:class="{'settings-sel': settingsMenu == 0}"><p>Account</p></a>
+                            </li>
+                            <li class="pure-menu-item">
+                                <a href="#" class="pure-menu-link" v-on:click="settingsMenu = 1" v-bind:class="{'settings-sel': settingsMenu == 1}"><p>Availability</p></a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="pure-u-md-3-4 settings-options" v-if="settingsMenu == 0">
+                        <h3>Account Settings</h3>
+                        <hr>
+
+                        <h4>Change Name:</h4>
+                        <form action="/users/settings/name" method="POST">
+                            <input type="text" name="f_name" placeholder="First Name">
+                            <input type="text" name="l_name" placeholder="Last Name">
+                            <input type="submit" class="pure-button pure-button-primary" value="Submit">
+                        </form>
+                        <hr>
+                        <h4>Change Password</h4>
+                        <form action="/users/settings/password" method="POST">
+                            <input type="password" name="old_pass" placeholder="Current Password" required="">
+                            <input type="password" name="new_pass" v-model="new_pass" placeholder="New Password" required="">
+                            <input type="password" name="new_pass_again" v-model="new_pass_again" placeholder="Re-enter New Password" required="">
+                            <input type="submit" class="pure-button pure-button-primary" value="Submit" v-if="new_pass == new_pass_again">
+                            <div v-if="new_pass != new_pass_again">Passwords don't match!</div>
+                        </form>
+                        <hr>
+                    </div>
+                    <div class="pure-u-md-3-4 settings-options" v-else-if="settingsMenu == 1">
+                        <h3>Availability Settings</h3>
+                        <hr>
+                        <h4 style="margin-bottom:0">Days Available</h4>
+                        <p style="margin-bottom:1rem">Check the days you are available.</p>
+                        <form action="/users/settings/availability" method="POST" style="width:60%">
+                            <div>
+                                <input type="checkbox" name="sun"><label>Sunday</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="mon"><label>Monday</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="tue"><label>Tuesday</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="wed"><label>Wednesday</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="thu"><label>Thursday</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="fri"><label>Friday</label>
+                            </div>
+                            <div>
+                                <input type="checkbox" name="sat"><label>Saturday</label>
+                            </div>
+                            <input type="submit" class="pure-button pure-button-primary" value="Update">
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </body>
+</html>
